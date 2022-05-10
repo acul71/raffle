@@ -1,0 +1,13 @@
+Build a Raffle App With Solidity and NextJS: Code Along
+https://www.youtube.com/watch?v=8bMrko6iD9Q
+
+https://tailwindcss.com/
+https://tailwindcss.com/docs/guides/nextjs
+yarn create next-app .
+yarn dev
+yarn add moralis react-moralis web3uikit
+yarn add -D tailwindcss postcss autoprefixer
+yarn tailwindcss init -p
+yarn add --dev prettier
+yarn next build
+yarn next export
