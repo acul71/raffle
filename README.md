@@ -11,4 +11,7 @@ A raffle is a gambling competition in which people obtain numbered tickets, each
 Connecting with metamask (wallet) players can buy a ticket and wait for the random selection to win the prize (the prize is the sum of all coins collected with tickets)  
 
 I'm going to add some features like to be able to buy more tickets at once, and a better UI  
+Technologies used in this project: 
+- Hardhat, Moralis, React, Chainlink (VRF, Keepers), Fleek (UI hosting), Polygon
+
 Stay tuned.....🚧👷
