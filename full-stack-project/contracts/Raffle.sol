@@ -17,6 +17,20 @@ contract Raffle is VRFConsumerBaseV2 {
         Calculating
     }
 
+    uint16 public constant REQUEST_CONFIRMATIONS = 3;
+    // Request 3 random numbers to VRF chainlink oracle
+    uint16 public constant NUM_WORDS = 3;
+    // This ruffle have 3 winners
+    uint8 public constant NUM_WINNERS = 3;
+    // This are the quotes for each one
+    uint8 public constant WINNER1_QUOTE = 80;
+    uint8 public constant WINNER2_QUOTE = 15;
+    uint8 public constant WINNER3_QUOTE = 5;
+    // Number of tickets to select
+    uint8 public constant NUM_TICKETS = 3;
+    // Number of saved raffle rounds winners
+    uint8 public constant NUM_SAVED_WINNER_ROUNDS = 10;
+
     struct playerTicket {
         address payable player;
         uint tickets;
@@ -35,27 +49,29 @@ contract Raffle is VRFConsumerBaseV2 {
     bytes32 public i_gasLane;
     uint64 public i_subscriptionId;
     uint32 public i_callbackGasLimit;
-    address public s_recentWinner;
+    uint s_prizePool;
+
+    // to Store raffle game result
+    // It's like a circoular struct
+    // It's implemented as an array of NUM_SAVED_WINNER_ROUNDS with s_recentWinnersIdx index
+    // Ex: With s_recentWinnersIdx=2 we got the order 2,3,4,5,6,7,8,9,0,1
+    // 2 is the last, 1 is the first
+    struct recentWinner {
+        address player1;
+        address player2;
+        address player3;
+        uint prizePool;
+        uint raffleTime;
+    }
+    recentWinner[NUM_SAVED_WINNER_ROUNDS] public s_recentWinners;
+    uint8 public s_recentWinnersIdx;
     uint256 public raffle_round;
-    
 
-    uint16 public constant REQUEST_CONFIRMATIONS = 3;
-    // Request 3 random numbers to VRF chainlink oracle
-    uint16 public constant NUM_WORDS = 3;
-    // This ruffle have 3 winners 
-    uint8 public constant NUM_WINNERS = 3;
-    // This are the quotes for each one
-    uint8 public constant WINNER1_QUOTE = 80;
-    uint8 public constant WINNER2_QUOTE = 15;
-    uint8 public constant WINNER3_QUOTE = 5;
-    // Number of tickets to select 
-    uint8 public constant NUM_TICKETS = 3;
-
-
+    uint totTickets;
 
     event RaffleEnter(address indexed player);
     event RequestedRaffleWinner(uint256 indexed requestId);
-    event WinnerPicked(address indexed recentWinner);
+    event WinnerPicked(recentWinner indexed s_recentWinner);
 
     constructor(
         uint256 entranceFee,
@@ -89,6 +105,7 @@ contract Raffle is VRFConsumerBaseV2 {
         //s_players[msg.sender] += tickets;
         // addBet(address payable player, uint tickets)
         addBet(payable(msg.sender), tickets);
+        s_prizePool += msg.value;
         emit RaffleEnter(msg.sender);
     }
 
@@ -144,6 +161,39 @@ contract Raffle is VRFConsumerBaseV2 {
         uint256, /*requestId*/
         uint256[] memory randomWords
     ) internal override {
+        // Get NUM_TICKETS unique tickets
+        uint256[3] memory _randomWords;
+        _randomWords[0] = randomWords[0];
+        _randomWords[1] = randomWords[1];
+        _randomWords[2] = randomWords[2];
+        uint[NUM_TICKETS] memory randTickets = getRandomTickets(_randomWords);
+
+        // Select NUM_WINNERS winners
+        address[NUM_WINNERS] memory winners = findWinners(randTickets);
+
+        // Pay the winners
+        uint8[3] memory quotes = [WINNER1_QUOTE, WINNER3_QUOTE, WINNER2_QUOTE];
+        for (uint idx = 0; idx < NUM_WINNERS; idx++) {
+            address payable winner = payable(winners[idx]);
+            //(bool success, ) = winner.call{value: address(this).balance}("");
+            (bool success, ) = winner.call{value: s_prizePool * quotes[idx]}(
+                ""
+            );
+            if (!success) {
+                revert Raffle__TransferFailed();
+            }
+        }
+
+        s_lastTimeStamp = block.timestamp;
+
+        // Store raffle game result
+        storeGameResult(winners, s_prizePool, s_lastTimeStamp);
+
+        raffle_round += 1;
+        s_prizePool = 0;
+        s_raffleState = RaffleState.Open;
+
+        /*
         uint256 indexOfWinner = randomWords[0] & s_players.length; // Check this should be % not & !!!
         address payable recentWinner = s_players[indexOfWinner];
         s_recentWinner = recentWinner;
@@ -154,8 +204,38 @@ contract Raffle is VRFConsumerBaseV2 {
         if (!success) {
             revert Raffle__TransferFailed();
         }
-        //removeBets();
-        emit WinnerPicked(recentWinner);
+        */
+
+        emit WinnerPicked(
+            recentWinner(
+                winners[0],
+                winners[1],
+                winners[2],
+                s_prizePool,
+                s_lastTimeStamp
+            )
+        );
+    }
+
+    /*
+      NOTE review this function if you want to react to NUM_WINNER param (player1....)
+    */
+    function storeGameResult(
+        address[NUM_WINNERS] memory winners,
+        uint _prizePool,
+        uint _raffleTime
+    ) internal {
+        s_recentWinnersIdx = s_recentWinnersIdx == 0
+            ? s_recentWinnersIdx = NUM_SAVED_WINNER_ROUNDS - 1
+            : s_recentWinnersIdx - 1;
+
+        s_recentWinners[s_recentWinnersIdx] = recentWinner(
+            winners[0],
+            winners[1],
+            winners[2],
+            _prizePool,
+            _raffleTime
+        );
     }
 
     //function addBet(address payable player, uint tickets) public payable {
@@ -180,9 +260,9 @@ contract Raffle is VRFConsumerBaseV2 {
     }
 
     // Returns NUM_PLAYERS random tickets (unique in the range 1..totTickets)
-    function getRandomTickets(uint[NUM_WORDS] memory randomWords, uint totTickets)
+    function getRandomTickets(uint[NUM_WORDS] memory randomWords)
         public
-        pure
+        view
         returns (uint[NUM_TICKETS] memory randTickets)
     {
         uint randTicketsIdx = 1;
@@ -198,7 +278,8 @@ contract Raffle is VRFConsumerBaseV2 {
             }
             if (randTicketsIdx == NUM_TICKETS) break;
         }
-        if (randTicketsIdx < NUM_TICKETS) revert Raffle__RandomTicketsNotUnique();
+        if (randTicketsIdx < NUM_TICKETS)
+            revert Raffle__RandomTicketsNotUnique();
         return randTickets;
     }
 
@@ -234,7 +315,7 @@ contract Raffle is VRFConsumerBaseV2 {
                 ) {
                     winners[prize] = s_bets[idx].player;
                     winnersIdx++;
-                    if (winnersIdx > NUM_WINNERS-1) {
+                    if (winnersIdx > NUM_WINNERS - 1) {
                         done = true;
                         break;
                     }
@@ -243,8 +324,7 @@ contract Raffle is VRFConsumerBaseV2 {
             if (done) break;
             curTicket += s_bets[idx].tickets;
         }
-        
+
         return winners;
     }
-
 }
