@@ -1,6 +1,8 @@
 import { useMoralis, userWeb3Contract, useWeb3Contract } from "react-moralis"
 import abi from "../constants/abi.json"
 import { useState, useEffect } from "react"
+import { PlayLottery } from "./PlayLottery"
+import { LotteryStats } from "./LotteryStats"
 
 const CONTRACT_ADDRESS = "0xfA77a882be1F96C2961E29a92824e98213E846b0"
 
@@ -50,6 +52,13 @@ export default function LotteryEntrance() {
 
 
   return (
+    <>
+      <PlayLottery />
+      <LotteryStats />
+    </>
+  )
+  /*
+  return (
     <div>
       <button
         className="rounded ml-auto p-1 font-bold bg-blue-500"
@@ -70,4 +79,5 @@ export default function LotteryEntrance() {
       <div>The recent winner is {recentWinner}</div>
     </div>
   )
+  */
 }
