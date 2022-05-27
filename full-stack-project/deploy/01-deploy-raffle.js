@@ -1,6 +1,6 @@
 const { ethers } = require("hardhat")
 
-const ENTRANCE_FEE = ethers.utils.parseEther("0.01")
+const ENTRANCE_FEE = ethers.utils.parseEther("0.0001") // 100000000000000 wei
 
 module.exports = async ({ getNamedAccounts, deployments }) => {
   const { deploy, log } = deployments

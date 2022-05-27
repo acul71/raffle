@@ -1,9 +1,9 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "/mnt/luca/Informatica/Ethereum/2022/202204_ChainLinkSpring202204_Hackathon/full-stack-project/contracts/Raffle.sol": {
-      "lastModificationDate": 1651277566561,
-      "contentHash": "cda9b0816defa72c4eaaae071f5d34f0",
+    "/mnt/luca/Informatica/Ethereum/2022/202204_ChainLinkSpring202204_Hackathon/PROJECT/raffle/full-stack-project/contracts/Raffle.sol": {
+      "lastModificationDate": 1653435019079,
+      "contentHash": "f19d6d5b1e3c6b4e246559c3afe8c827",
       "sourceName": "contracts/Raffle.sol",
       "solcConfig": {
         "version": "0.8.7",
@@ -46,7 +46,7 @@
         "Raffle"
       ]
     },
-    "/mnt/luca/Informatica/Ethereum/2022/202204_ChainLinkSpring202204_Hackathon/full-stack-project/node_modules/@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol": {
+    "/mnt/luca/Informatica/Ethereum/2022/202204_ChainLinkSpring202204_Hackathon/PROJECT/raffle/full-stack-project/node_modules/@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol": {
       "lastModificationDate": 1651275728721,
       "contentHash": "56ec852a2aeddf81bf5a5720a7fc6a63",
       "sourceName": "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol",
@@ -88,7 +88,7 @@
         "VRFCoordinatorV2Interface"
       ]
     },
-    "/mnt/luca/Informatica/Ethereum/2022/202204_ChainLinkSpring202204_Hackathon/full-stack-project/node_modules/@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol": {
+    "/mnt/luca/Informatica/Ethereum/2022/202204_ChainLinkSpring202204_Hackathon/PROJECT/raffle/full-stack-project/node_modules/@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol": {
       "lastModificationDate": 1651275728501,
       "contentHash": "8cb9d3df2c7eda7096fc5f221bdebed3",
       "sourceName": "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol",

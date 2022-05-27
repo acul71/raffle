@@ -8,6 +8,9 @@ yarn add --dev @nomiclabs/hardhat-ethers@npm:hardhat-deploy-ethers ethers
 yarn add --dev prettier-plugin-solidity prettier
 yarn add --dev dotenv
 
+source /usr/share/nvm/nvm.sh
+nvm use 16
+
 yarn hardhat
 yarn hardhat compile
 yarn hardhat test
@@ -31,3 +34,9 @@ module.exports = {
   solidity: "0.8.7",
 };
 
+----------------------
+
+How do I "simulate" chainlink VRF and keeper in hardhat for tests (localhost). Can you give me some link to look at?
+Andrej | Chainlink — Today at 2:51 AM
+https://github.com/smartcontractkit/hardhat-starter-kit/blob/main/test/unit/RandomNumberConsumerV2_unit_test.js, https://github.com/smartcontractkit/hardhat-starter-kit/blob/main/test/unit/KeepersCounter_unit_test.js
+If you are writing tests in Typescript, just switch from main to typescript branch, files are in the same folder (test/unit)

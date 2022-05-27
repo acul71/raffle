@@ -49,7 +49,7 @@ contract Raffle is VRFConsumerBaseV2 {
     bytes32 public i_gasLane;
     uint64 public i_subscriptionId;
     uint32 public i_callbackGasLimit;
-    uint s_prizePool;
+    uint public s_prizePool;
 
     // to Store raffle game result
     // It's like a circoular struct
@@ -65,11 +65,11 @@ contract Raffle is VRFConsumerBaseV2 {
     }
     recentWinner[NUM_SAVED_WINNER_ROUNDS] public s_recentWinners;
     uint8 public s_recentWinnersIdx;
-    uint256 public raffle_round;
+    uint256 public s_raffle_round = 1;
 
     uint totTickets;
 
-    event RaffleEnter(address indexed player);
+    event RaffleEnter(address indexed player, uint indexed tickets);
     event RequestedRaffleWinner(uint256 indexed requestId);
     event WinnerPicked(recentWinner indexed s_recentWinner);
 
@@ -106,7 +106,7 @@ contract Raffle is VRFConsumerBaseV2 {
         // addBet(address payable player, uint tickets)
         addBet(payable(msg.sender), tickets);
         s_prizePool += msg.value;
-        emit RaffleEnter(msg.sender);
+        emit RaffleEnter(msg.sender, tickets);
     }
 
     // Select random winner
@@ -162,10 +162,10 @@ contract Raffle is VRFConsumerBaseV2 {
         uint256[] memory randomWords
     ) internal override {
         // Get NUM_TICKETS unique tickets
-        uint256[3] memory _randomWords;
-        _randomWords[0] = randomWords[0];
-        _randomWords[1] = randomWords[1];
-        _randomWords[2] = randomWords[2];
+        uint256[NUM_WORDS] memory _randomWords;
+        for (uint idx = 0; idx < NUM_WORDS; idx++) {
+            _randomWords[idx] = randomWords[idx];
+        }
         uint[NUM_TICKETS] memory randTickets = getRandomTickets(_randomWords);
 
         // Select NUM_WINNERS winners
@@ -189,7 +189,7 @@ contract Raffle is VRFConsumerBaseV2 {
         // Store raffle game result
         storeGameResult(winners, s_prizePool, s_lastTimeStamp);
 
-        raffle_round += 1;
+        s_raffle_round += 1;
         s_prizePool = 0;
         s_raffleState = RaffleState.Open;
 
@@ -254,17 +254,23 @@ contract Raffle is VRFConsumerBaseV2 {
         s_bets.push(bet);
     }
 
-    //function removeBets() internal {
-    function removeBets() public {
+    //function removeBets() public {
+    function removeBets() internal {
         delete s_bets;
     }
 
+    function numPlayers() public view returns (uint totPlayers) {
+        return s_bets.length;
+    }
+
+    function getBets() public view returns (playerTicket[] memory) {
+        return s_bets;
+    }
+
     // Returns NUM_PLAYERS random tickets (unique in the range 1..totTickets)
-    function getRandomTickets(uint[NUM_WORDS] memory randomWords)
-        public
-        view
-        returns (uint[NUM_TICKETS] memory randTickets)
-    {
+    function getRandomTickets(
+        uint[NUM_WORDS] memory randomWords // internal
+    ) public view returns (uint[NUM_TICKETS] memory randTickets) {
         uint randTicketsIdx = 1;
         uint randNum;
 
@@ -284,7 +290,8 @@ contract Raffle is VRFConsumerBaseV2 {
     }
 
     function findWinners(uint[NUM_WINNERS] memory winTickets)
-        public
+        internal
+        view
         returns (address[NUM_WINNERS] memory winners)
     {
         uint curTicket = 1;
