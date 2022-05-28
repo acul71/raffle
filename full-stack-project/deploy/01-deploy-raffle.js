@@ -17,10 +17,10 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
   */
   const args = [ 
     ENTRANCE_FEE, 
-    "300", 
-    "0x01BE23585060835E02B77ef475b0Cc51aA1e0709", 
+    "600", 
+    "0x6168499c0cFfCaCD319c818142124B7A15E857ab", 
     "0xd89b2bf150e3b9e13446986e571fb9cab24b13cea0a43ea20a6049a85cc807cc", 
-    "3632", 
+    "5226",
     "500000" 
   ]
 

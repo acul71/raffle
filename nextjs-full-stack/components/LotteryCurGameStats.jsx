@@ -6,6 +6,7 @@ import { CONTRACT_ADDRESS } from '../constants/constants'
 import { useState, useEffect } from "react"
 import { ethers, BigNumber } from 'ethers'
 import Countdown from 'react-countdown'
+import styles from '../styles/Home.module.css'
 
 export const LotteryCurGameStats = () => {
   const { isWeb3Enabled } = useMoralis()
@@ -89,23 +90,13 @@ export const LotteryCurGameStats = () => {
 
   console.log("HERE")
 
-  /*
-  console.log("reload=", reload)
-  if (reload == 0) {
-    console.log("reload after if=", reload)
-    setInterval(() => {
-      console.log("Reload set!")
-      setReload(reload + 1)
-    }, 10000)
-  }
-  */
-
 
   useEffect(() => {
     async function updateUi() {
 
-
-
+      //
+      // Add try to this section to avoid errors!!
+      //
       const pricePerTicketFromCall = await getPricePerTicket()
       console.log("pricePerTicketFromCall=", pricePerTicketFromCall.toString())
       setpricePerTicket(pricePerTicketFromCall.toString())
@@ -144,13 +135,13 @@ export const LotteryCurGameStats = () => {
 
     if (isWeb3Enabled) {
       updateUi()
-      
+
       const intervalId = setInterval(() => {
         console.log('_interval')
         updateUi();
       }, 10000);
-      return () => {console.log('remove interval'); clearInterval(intervalId)};
-      
+      return () => { console.log('remove interval'); clearInterval(intervalId) };
+
     }
 
 
@@ -180,13 +171,26 @@ export const LotteryCurGameStats = () => {
         <div>Loading...</div>
       ) : (
         <>
-          <div><b>LotteryCurGameStats</b></div>
-          <div>Lottery round: {lotteryRound}</div>
-          <div>Time to end: <Countdown date={Number(lastTimeStamp) * 1000 + Number(roundInterval) * 1000} renderer={timeRenderer} /></div>
-          <div>Tot tickets: {totTickets}</div>
-          <div>Total pot: {ethers.utils.formatEther(prizePool)}</div>
-          <div>Price per ticket: {ethers.utils.formatEther(pricePerTicket)}</div>
-          <div>Price place: {winnersQuotes}</div>
+          <div className={styles.div_green}>
+            <b>LotteryCurGameStats</b>
+            <div>
+              <span className='ml-2'>Lottery round: {lotteryRound}</span>
+              <span className='ml-5'>Time to end: <Countdown date={Number(lastTimeStamp) * 1000 + Number(roundInterval) * 1000} renderer={timeRenderer} /></span>
+            </div>
+            <div>
+              <span className='ml-2'>Tot tickets: {totTickets}</span>
+              <span className='ml-5'>Total pot: {ethers.utils.formatEther(prizePool)}</span>
+              <span className='ml-5'>Price per ticket: {ethers.utils.formatEther(pricePerTicket)}</span>
+            </div>
+            <div className='ml-2'>
+              Price place:
+              {winnersQuotes.map((quote, idx) => {
+                return (
+                  <span key={idx} className='ml-3'>{idx + 1}° {quote}%</span>
+                )
+              })}
+            </div>
+          </div>
         </>
       )}
     </>

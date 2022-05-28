@@ -114,3 +114,25 @@
     flex-direction: column;
   }
 }
+
+
+.div1 {
+  background-color: #EBEBEB;
+}
+
+.div2 {
+  background-color: #ABBAEA;
+}
+
+.div3 {
+  background-color: #FBD603;
+}
+
+.div_green {
+  background-color: #3ae26c;
+}
+
+.div_red {
+  background-color: #e8aee0;
+}
+

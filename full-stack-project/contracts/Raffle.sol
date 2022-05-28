@@ -4,6 +4,9 @@ pragma solidity ^0.8.7;
 
 import "@chainlink/contracts/src/v0.8/interfaces/VRFCoordinatorV2Interface.sol";
 import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
+import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
+// import "hardhat/console.sol";
+
 
 error Raffle__SendMoreToEnterRaffle();
 error Raffle__RaffleNotOpen();
@@ -11,7 +14,7 @@ error Raffle__UpkeepNotNeeded();
 error Raffle__TransferFailed();
 error Raffle__RandomTicketsNotUnique();
 
-contract Raffle is VRFConsumerBaseV2 {
+contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
     enum RaffleState {
         Open,
         Calculating
@@ -19,7 +22,7 @@ contract Raffle is VRFConsumerBaseV2 {
 
     uint16 public constant REQUEST_CONFIRMATIONS = 3;
     // Request 3 random numbers to VRF chainlink oracle
-    uint16 public constant NUM_WORDS = 3;
+    uint16 public constant NUM_WORDS = 1;
     // This ruffle have 3 winners
     uint8 public constant NUM_WINNERS = 3;
     // This are the quotes for each one
@@ -27,7 +30,7 @@ contract Raffle is VRFConsumerBaseV2 {
     uint8 public constant WINNER2_QUOTE = 15;
     uint8 public constant WINNER3_QUOTE = 5;
     // Number of tickets to select
-    uint8 public constant NUM_TICKETS = 3;
+    uint8 public constant NUM_WIN_TICKETS = 3;
     // Number of saved raffle rounds winners
     uint8 public constant NUM_SAVED_WINNER_ROUNDS = 10;
 
@@ -67,7 +70,7 @@ contract Raffle is VRFConsumerBaseV2 {
     uint8 public s_recentWinnersIdx;
     uint256 public s_raffle_round = 1;
 
-    uint totTickets;
+    uint256 public totTickets;
 
     event RaffleEnter(address indexed player, uint indexed tickets);
     event RequestedRaffleWinner(uint256 indexed requestId);
@@ -120,8 +123,10 @@ contract Raffle is VRFConsumerBaseV2 {
     function checkUpkeep(
         bytes memory /* checkData */
     )
+        //external
         public
         view
+        override
         returns (
             bool upkeepNeeded,
             bytes memory /* performData */
@@ -137,7 +142,7 @@ contract Raffle is VRFConsumerBaseV2 {
 
     function performUpkeep(
         bytes calldata /* performData */
-    ) external {
+    ) external override {
         (bool upkeepNeed, ) = checkUpkeep("");
         if (!upkeepNeed) {
             revert Raffle__UpkeepNotNeeded();
@@ -154,6 +159,9 @@ contract Raffle is VRFConsumerBaseV2 {
         emit RequestedRaffleWinner(requestId);
     }
 
+    //uniqueTickets(uint256 seed, uint8 numWinTickets, uint256 _totTickets)
+    //          returns (uint256[NUM_WINNERS] memory randTickets)
+    
     //
     // Get the random numbers and select winners
     //
@@ -161,21 +169,25 @@ contract Raffle is VRFConsumerBaseV2 {
         uint256, /*requestId*/
         uint256[] memory randomWords
     ) internal override {
-        // Get NUM_TICKETS unique tickets
+        /*
+        // TO DELETE!!
+        // Get NUM_WIN_TICKETS unique tickets
         uint256[NUM_WORDS] memory _randomWords;
         for (uint idx = 0; idx < NUM_WORDS; idx++) {
             _randomWords[idx] = randomWords[idx];
         }
-        uint[NUM_TICKETS] memory randTickets = getRandomTickets(_randomWords);
+        uint[NUM_WIN_TICKETS] memory randTickets = getRandomTickets(_randomWords);
+        */
+        uint256[NUM_WIN_TICKETS] memory randTickets = uniqueTickets(randomWords[0], NUM_WIN_TICKETS, totTickets);
 
         // Select NUM_WINNERS winners
         address[NUM_WINNERS] memory winners = findWinners(randTickets);
 
         // Pay the winners
-        uint8[3] memory quotes = [WINNER1_QUOTE, WINNER3_QUOTE, WINNER2_QUOTE];
+        uint8[NUM_WINNERS] memory quotes = [WINNER1_QUOTE, WINNER3_QUOTE, WINNER2_QUOTE];
         for (uint idx = 0; idx < NUM_WINNERS; idx++) {
+            if (winners[idx] == address(0)) break;
             address payable winner = payable(winners[idx]);
-            //(bool success, ) = winner.call{value: address(this).balance}("");
             (bool success, ) = winner.call{value: s_prizePool * quotes[idx]}(
                 ""
             );
@@ -267,10 +279,15 @@ contract Raffle is VRFConsumerBaseV2 {
         return s_bets;
     }
 
+    function getRecentWinners() public view returns(recentWinner[NUM_SAVED_WINNER_ROUNDS] memory) {
+        return s_recentWinners;
+    }
+
+    /*
     // Returns NUM_PLAYERS random tickets (unique in the range 1..totTickets)
     function getRandomTickets(
         uint[NUM_WORDS] memory randomWords // internal
-    ) public view returns (uint[NUM_TICKETS] memory randTickets) {
+    ) public view returns (uint[NUM_WIN_TICKETS] memory randTickets) {
         uint randTicketsIdx = 1;
         uint randNum;
 
@@ -282,14 +299,46 @@ contract Raffle is VRFConsumerBaseV2 {
                 randTickets[randTicketsIdx] = randNum;
                 randTicketsIdx++;
             }
-            if (randTicketsIdx == NUM_TICKETS) break;
+            if (randTicketsIdx == NUM_WIN_TICKETS) break;
         }
-        if (randTicketsIdx < NUM_TICKETS)
+        if (randTicketsIdx < NUM_WIN_TICKETS)
             revert Raffle__RandomTicketsNotUnique();
         return randTickets;
     }
+    */
 
-    function findWinners(uint[NUM_WINNERS] memory winTickets)
+    function uniqueTickets(uint256 seed, uint8 numWinTickets, uint256 _totTickets)
+        public
+        // internal
+        pure
+        returns (uint256[NUM_WINNERS] memory randTickets)
+    {
+        uint256 randNum;
+        uint256 i;
+        bool unique;
+        randTickets[0] = uint8((seed % _totTickets) + 1);
+        uint8 curTicket = 1;
+        while (curTicket < numWinTickets) {
+            i += 1;
+            randNum = uint256(
+                (uint256(keccak256(abi.encode(seed, i))) % _totTickets) + 1
+            );
+            unique = true;
+            for (uint8 idx = 0; idx < NUM_WINNERS; idx++) {
+                if (randNum == randTickets[idx]) {
+                    unique = false;
+                    break;
+                }
+            }
+            if (unique) {
+                randTickets[curTicket] = randNum;
+                curTicket += 1;
+            }
+        }
+        return randTickets;
+    }
+
+    function findWinners(uint256[NUM_WINNERS] memory winTickets)
         internal
         view
         returns (address[NUM_WINNERS] memory winners)
@@ -298,23 +347,7 @@ contract Raffle is VRFConsumerBaseV2 {
         uint winnersIdx = 0;
         bool done;
         for (uint idx = 0; idx < s_bets.length; idx++) {
-            /*
-            if (winTickets[0] >= curTicket  &&  winTickets[0] < curTicket + s_bets[idx].tickets) {
-                winners[0] = s_bets[idx].player;
-                winnersIdx++;
-                if (winnersIdx > 2) break;
-            }
-            if (winTickets[1] >= curTicket  &&  winTickets[1] < curTicket + s_bets[idx].tickets) {
-                winners[1] = s_bets[idx].player;
-                winnersIdx++;
-                if (winnersIdx > 2) break;
-            }
-            if (winTickets[2] >= curTicket  &&  winTickets[2] < curTicket + s_bets[idx].tickets) {
-                winners[2] = s_bets[idx].player;
-                winnersIdx++;
-                if (winnersIdx > 2) break;
-            }
-            */
+            
             for (uint prize = 0; prize < NUM_WINNERS; prize++) {
                 if (
                     winTickets[prize] >= curTicket &&
