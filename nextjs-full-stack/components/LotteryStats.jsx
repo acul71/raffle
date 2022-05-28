@@ -77,8 +77,8 @@ export const LotteryStats = () => {
 
     return (
       <>
-        <div><b>This round tickets</b></div>
-        <table>
+        <div className='ml-5 mt-4'><b>This round tickets</b></div>
+        <table className='ml-5'>
           <thead>
             <tr>
               <th>Tot Tickets</th>
@@ -103,8 +103,8 @@ export const LotteryStats = () => {
             }
           </tbody>
         </table>
-        <div><b>Past winners</b></div>
-        <table>
+        <div className='mt-5 ml-5'><b>Past winners</b></div>
+        <table className='ml-5'>
           <thead>
             <tr>
               <th>Round</th>
@@ -115,6 +115,7 @@ export const LotteryStats = () => {
           <tbody>
             {recentWinners.map((rec, idx) => {
               raffleRound += 1
+              if (raffleRound<2)
               return (
                 <>
                   <tr key={idx * 10 + 0}>

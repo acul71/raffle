@@ -174,19 +174,19 @@ export const LotteryCurGameStats = () => {
           <div className={styles.div_green}>
             <b>LotteryCurGameStats</b>
             <div>
-              <span className='ml-2'>Lottery round: {lotteryRound}</span>
-              <span className='ml-5'>Time to end: <Countdown date={Number(lastTimeStamp) * 1000 + Number(roundInterval) * 1000} renderer={timeRenderer} /></span>
+              <span className='ml-5'>Lottery round: <b>{lotteryRound}</b></span>
+              <span className='ml-5'>Time to end: <b><Countdown date={Number(lastTimeStamp) * 1000 + Number(roundInterval) * 1000} renderer={timeRenderer} /></b></span>
             </div>
             <div>
-              <span className='ml-2'>Tot tickets: {totTickets}</span>
-              <span className='ml-5'>Total pot: {ethers.utils.formatEther(prizePool)}</span>
-              <span className='ml-5'>Price per ticket: {ethers.utils.formatEther(pricePerTicket)}</span>
+              <span className='ml-5'>Tot tickets: <b>{totTickets}</b></span>
+              <span className='ml-5'>Total pot: <b>{ethers.utils.formatEther(prizePool)}</b></span>
+              <span className='ml-5'>Price per ticket: <b>{ethers.utils.formatEther(pricePerTicket)}</b></span>
             </div>
-            <div className='ml-2'>
-              Price place:
+            <div className='ml-5'>
+              Quotes:
               {winnersQuotes.map((quote, idx) => {
                 return (
-                  <span key={idx} className='ml-3'>{idx + 1}° {quote}%</span>
+                  <span key={idx} className='ml-3'>{idx + 1}° <b>{quote}%</b></span>
                 )
               })}
             </div>

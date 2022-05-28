@@ -31,10 +31,10 @@ export const LotteryPlaceBet = () => {
   return (
     <>
       <div className={styles.div_red}><b>LotteryPlaceBet</b>
-        <div>
-          <label htmlFor="tickets">Number of tickets:</label>
+        <div className='ml-5'>
+          <label className='mr-2' htmlFor="tickets">Number of tickets:</label>
 
-          <input type="number" ref={ticketsInput} id="tickets" name="tickets" min="1" defaultValue={1} />
+          <input className='mr-4' type="number" ref={ticketsInput} id="tickets" name="tickets" min="1" defaultValue={1} />
           <button className='button4' onClick={() => buyTickets()}>Buy tickets</button>
         </div>
       </div>

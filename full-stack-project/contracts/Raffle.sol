@@ -7,14 +7,13 @@ import "@chainlink/contracts/src/v0.8/VRFConsumerBaseV2.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/KeeperCompatibleInterface.sol";
 // import "hardhat/console.sol";
 
-
 error Raffle__SendMoreToEnterRaffle();
 error Raffle__RaffleNotOpen();
 error Raffle__UpkeepNotNeeded();
 error Raffle__TransferFailed();
 error Raffle__RandomTicketsNotUnique();
 
-contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
+contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
     enum RaffleState {
         Open,
         Calculating
@@ -123,11 +122,11 @@ contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
     function checkUpkeep(
         bytes memory /* checkData */
     )
-        //external
         public
         view
         override
         returns (
+            //external
             bool upkeepNeeded,
             bytes memory /* performData */
         )
@@ -159,9 +158,6 @@ contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
         emit RequestedRaffleWinner(requestId);
     }
 
-    //uniqueTickets(uint256 seed, uint8 numWinTickets, uint256 _totTickets)
-    //          returns (uint256[NUM_WINNERS] memory randTickets)
-    
     //
     // Get the random numbers and select winners
     //
@@ -169,22 +165,21 @@ contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
         uint256, /*requestId*/
         uint256[] memory randomWords
     ) internal override {
-        /*
-        // TO DELETE!!
-        // Get NUM_WIN_TICKETS unique tickets
-        uint256[NUM_WORDS] memory _randomWords;
-        for (uint idx = 0; idx < NUM_WORDS; idx++) {
-            _randomWords[idx] = randomWords[idx];
-        }
-        uint[NUM_WIN_TICKETS] memory randTickets = getRandomTickets(_randomWords);
-        */
-        uint256[NUM_WIN_TICKETS] memory randTickets = uniqueTickets(randomWords[0], NUM_WIN_TICKETS, totTickets);
+        uint256[NUM_WIN_TICKETS] memory randTickets = uniqueTickets(
+            randomWords[0],
+            NUM_WIN_TICKETS,
+            totTickets
+        );
 
         // Select NUM_WINNERS winners
         address[NUM_WINNERS] memory winners = findWinners(randTickets);
 
         // Pay the winners
-        uint8[NUM_WINNERS] memory quotes = [WINNER1_QUOTE, WINNER3_QUOTE, WINNER2_QUOTE];
+        uint8[NUM_WINNERS] memory quotes = [
+            WINNER1_QUOTE,
+            WINNER3_QUOTE,
+            WINNER2_QUOTE
+        ];
         for (uint idx = 0; idx < NUM_WINNERS; idx++) {
             if (winners[idx] == address(0)) break;
             address payable winner = payable(winners[idx]);
@@ -204,19 +199,6 @@ contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
         s_raffle_round += 1;
         s_prizePool = 0;
         s_raffleState = RaffleState.Open;
-
-        /*
-        uint256 indexOfWinner = randomWords[0] & s_players.length; // Check this should be % not & !!!
-        address payable recentWinner = s_players[indexOfWinner];
-        s_recentWinner = recentWinner;
-        s_players = new address payable[](0);
-        s_raffleState = RaffleState.Open;
-        s_lastTimeStamp = block.timestamp;
-        (bool success, ) = recentWinner.call{value: address(this).balance}("");
-        if (!success) {
-            revert Raffle__TransferFailed();
-        }
-        */
 
         emit WinnerPicked(
             recentWinner(
@@ -264,6 +246,7 @@ contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
         bet.player = player;
         bet.tickets = tickets;
         s_bets.push(bet);
+        totTickets += tickets;
     }
 
     //function removeBets() public {
@@ -279,39 +262,26 @@ contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
         return s_bets;
     }
 
-    function getRecentWinners() public view returns(recentWinner[NUM_SAVED_WINNER_ROUNDS] memory) {
+    function getRecentWinners()
+        public
+        view
+        returns (recentWinner[NUM_SAVED_WINNER_ROUNDS] memory)
+    {
         return s_recentWinners;
     }
 
-    /*
-    // Returns NUM_PLAYERS random tickets (unique in the range 1..totTickets)
-    function getRandomTickets(
-        uint[NUM_WORDS] memory randomWords // internal
-    ) public view returns (uint[NUM_WIN_TICKETS] memory randTickets) {
-        uint randTicketsIdx = 1;
-        uint randNum;
-
-        randTickets[0] = randomWords[0] % totTickets;
-        for (uint idx = 1; idx < NUM_WORDS; idx++) {
-            randNum = randomWords[idx] % totTickets;
-            // This is hardcoded for 3 tickets (randTickets[0] randTickets[1])
-            if (randTickets[0] != randNum && randTickets[1] != randNum) {
-                randTickets[randTicketsIdx] = randNum;
-                randTicketsIdx++;
-            }
-            if (randTicketsIdx == NUM_WIN_TICKETS) break;
-        }
-        if (randTicketsIdx < NUM_WIN_TICKETS)
-            revert Raffle__RandomTicketsNotUnique();
-        return randTickets;
-    }
-    */
-
-    function uniqueTickets(uint256 seed, uint8 numWinTickets, uint256 _totTickets)
+    // Returns NUM_WINNERS random tickets (unique in the range 1..totTickets)
+    function uniqueTickets(
+        uint256 seed,
+        uint8 numWinTickets,
+        uint256 _totTickets
+    )
         public
-        // internal
         pure
-        returns (uint256[NUM_WINNERS] memory randTickets)
+        returns (
+            // internal
+            uint256[NUM_WINNERS] memory randTickets
+        )
     {
         uint256 randNum;
         uint256 i;
@@ -347,7 +317,6 @@ contract Raffle is VRFConsumerBaseV2 , KeeperCompatibleInterface {
         uint winnersIdx = 0;
         bool done;
         for (uint idx = 0; idx < s_bets.length; idx++) {
-            
             for (uint prize = 0; prize < NUM_WINNERS; prize++) {
                 if (
                     winTickets[prize] >= curTicket &&
