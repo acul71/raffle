@@ -183,7 +183,7 @@ contract Raffle is VRFConsumerBaseV2, KeeperCompatibleInterface {
         for (uint idx = 0; idx < NUM_WINNERS; idx++) {
             if (winners[idx] == address(0)) break;
             address payable winner = payable(winners[idx]);
-            (bool success, ) = winner.call{value: s_prizePool * quotes[idx]}(
+            (bool success, ) = winner.call{value: s_prizePool * quotes[idx] / 100}(
                 ""
             );
             if (!success) {
